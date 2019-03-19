@@ -36,7 +36,6 @@ namespace Lab1
         // Generating PNG pictures
         public void DumpPng(QrCode qrcode,int row,string name="LengthBelow4")
         {
-            string base_filename = @"C:\Users\cxdzb\Desktop\results\";    ///// Define base paths
             const int modelSizeInPixels = 16;
             GraphicsRenderer render = new GraphicsRenderer(new FixedModuleSize(modelSizeInPixels, QuietZoneModules.Two), Brushes.Black, Brushes.White);// Define the render
 
@@ -45,20 +44,20 @@ namespace Lab1
             Graphics g = Graphics.FromImage(map);    ///// definition diagram
             render.Draw(g, qrcode.Matrix);    ///// Rendering pictures
 
-            Bitmap background = (Bitmap)Image.FromFile(base_filename+"background.jpg");    ///// Define background bitmap
+            Bitmap background = (Bitmap)Image.FromFile(@"resource\background.jpg");    ///// Define background bitmap
             Graphics gh = Graphics.FromImage(background);    ///// Define Background Map
             Point qrcodePoint = new Point((background.Width - 400) / 2, (background.Height - 400) / 2);    ///// Define the upper left corner position of qrcode
             gh.FillRectangle(Brushes.Green, qrcodePoint.X-5, qrcodePoint.Y-5, 410, 410);    ///// Fill in a green area
             gh.DrawImage(map, qrcodePoint.X, qrcodePoint.Y, 400, 400);    ///// Draw qrcode in the green area
 
-            Image img = Image.FromFile(base_filename+"logo.png");    ///// Load logo images
+            Image img = Image.FromFile(@"resource\logo.png");    ///// Load logo images
             Point imgPoint = new Point((background.Width - img.Width/4) / 2, (background.Height - img.Height/4) / 2);    ///// Define the starting point coordinates of the upper left corner of logo
             gh.DrawImage(img, imgPoint.X, imgPoint.Y, img.Width/4, img.Height/4);    ///// Draw logo in the center of the picture
 
             string fileNumber = row.ToString();    ///// Line Number Converted to String
             while (fileNumber.Length < 3) fileNumber = "0" + fileNumber;    ///// Fill forward 0 to 3 bits
 
-            background.Save(base_filename + fileNumber + "-" + name + ".png", ImageFormat.Png);    ///// Save as PNG picture
+            background.Save(@"results\" + fileNumber + "-" + name + ".png", ImageFormat.Png);    ///// Save as PNG picture
         }
 
         // Read MySQL database
@@ -82,6 +81,7 @@ namespace Lab1
             IWorkbook workbook;    ///// Define the workbook to save the data of excel
             string fileExt = Path.GetExtension(path).ToLower();    ///// Get the Extension(.xls/.xlsx)
             List<string> contents = new List<string>();    ///// Create a list to save every line
+            path = Path.GetFullPath(path);
             using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))    ///// Open the file
             {
                 if (fileExt == ".xlsx") workbook = new XSSFWorkbook(fs);    ///// Judge which format the file is
