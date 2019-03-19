@@ -6,6 +6,9 @@ using System.IO;
 using Gma.QrCodeNet.Encoding;
 using Gma.QrCodeNet.Encoding.Windows.Render;
 using MySql.Data.MySqlClient;
+using NPOI.HSSF.UserModel;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 namespace Lab1
 {
@@ -62,18 +65,36 @@ namespace Lab1
         public List<string> ReadMysql(string table)
         {
             string connStr = "Database=mydata;datasource=192.168.142.130;port=3306;user=lsp;pwd=1005968086;";
-            MySqlConnection conn = new MySqlConnection(connStr); ///// Connect to the database
+            MySqlConnection conn = new MySqlConnection(connStr);     ///// Connect to the database
             conn.Open();    ///// Open the connection
             MySqlCommand cmd = new MySqlCommand("select * from "+table, conn);
-            MySqlDataReader reader = cmd.ExecuteReader(); ///// Create commands and execute them
-            List<string> qrcodes = new List<string>(); ///// Declare storage QRcode container
-            while (reader.Read()) ///// Read data line by line and store it
+            MySqlDataReader reader = cmd.ExecuteReader();     ///// Create commands and execute them
+            List<string> qrcodes = new List<string>();     ///// Declare storage QRcode container
+            while (reader.Read())     ///// Read data line by line and store it
                 qrcodes.Add(reader.GetString("code"));
-            reader.Close(); ///// Close the connection
+            reader.Close();     ///// Close the connection
             return qrcodes;
         }
 
         // Read Excel tables
+        public List<string> ReadExcel(string path)
+        {
+            IWorkbook workbook;    ///// Define the workbook to save the data of excel
+            string fileExt = Path.GetExtension(path).ToLower();    ///// Get the Extension(.xls/.xlsx)
+            List<string> contents = new List<string>();    ///// Create a list to save every line
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))    ///// Open the file
+            {
+                if (fileExt == ".xlsx") workbook = new XSSFWorkbook(fs);    ///// Judge which format the file is
+                else if (fileExt == ".xls") workbook = new HSSFWorkbook(fs);
+                else workbook = null;
+                if (workbook == null) return null;
+
+                ISheet sheet = workbook.GetSheetAt(0);    ///// Get sheet1
+                for (int i = sheet.FirstRowNum; i <= sheet.LastRowNum; i++)
+                    contents.Add(sheet.GetRow(i).GetCell(0).ToString());     ///// Read data line by line and store it
+            }
+            return contents;
+        }
 
         // main program
         static void Main(string[] args)
@@ -121,7 +142,19 @@ namespace Lab1
                 // If there is a -e parameter, open the Excel
                 else if (str.StartsWith("-e"))
                 {
-
+                    // Read the excel
+                    List<string> qrcodes = program.ReadExcel(args[0].Substring(2));
+                    // read by line
+                    int row = 0;
+                    foreach (string qrcode in qrcodes)
+                    {
+                        // Describe QRcode as the row in the table
+                        row++;
+                        // If the number of characters is less than 4
+                        if (qrcode.Length < 4) program.DumpPng(program.StringToQrCode(qrcode), row);
+                        // If the number of characters is greater than or equal to 4
+                        else program.DumpPng(program.StringToQrCode(qrcode), row, qrcode.Substring(0, 4));
+                    }
                 }
                 // If there is no - parameter
                 else program.PrintQrCode(program.StringToQrCode(str));
