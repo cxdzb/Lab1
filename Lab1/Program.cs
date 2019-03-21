@@ -44,20 +44,20 @@ namespace Lab1
             Graphics g = Graphics.FromImage(map);    ///// definition diagram
             render.Draw(g, qrcode.Matrix);    ///// Rendering pictures
 
-            Bitmap background = (Bitmap)Image.FromFile(@"resource\background.jpg");    ///// Define background bitmap
+            Bitmap background = (Bitmap)Image.FromFile(@"..\..\..\resource\background.jpg");    ///// Define background bitmap
             Graphics gh = Graphics.FromImage(background);    ///// Define Background Map
             Point qrcodePoint = new Point((background.Width - 400) / 2, (background.Height - 400) / 2);    ///// Define the upper left corner position of qrcode
             gh.FillRectangle(Brushes.Green, qrcodePoint.X-5, qrcodePoint.Y-5, 410, 410);    ///// Fill in a green area
             gh.DrawImage(map, qrcodePoint.X, qrcodePoint.Y, 400, 400);    ///// Draw qrcode in the green area
 
-            Image img = Image.FromFile(@"resource\logo.png");    ///// Load logo images
+            Image img = Image.FromFile(@"..\..\..\resource\logo.png");    ///// Load logo images
             Point imgPoint = new Point((background.Width - img.Width/4) / 2, (background.Height - img.Height/4) / 2);    ///// Define the starting point coordinates of the upper left corner of logo
             gh.DrawImage(img, imgPoint.X, imgPoint.Y, img.Width/4, img.Height/4);    ///// Draw logo in the center of the picture
 
             string fileNumber = row.ToString();    ///// Line Number Converted to String
             while (fileNumber.Length < 3) fileNumber = "0" + fileNumber;    ///// Fill forward 0 to 3 bits
 
-            background.Save(@"results\" + fileNumber + "-" + name + ".png", ImageFormat.Png);    ///// Save as PNG picture
+            background.Save(@"..\..\..\results\" + fileNumber + "-" + name + ".png", ImageFormat.Png);    ///// Save as PNG picture
         }
 
         // Read MySQL database
@@ -100,7 +100,7 @@ namespace Lab1
         static void Main(string[] args)
         {
             // Control input length
-            if (args.Length==1&&args[0].Length <= 64)
+            if (args.Length == 1 && args[0].Length <= 64)
             {
                 Program program = new Program();
                 string str = args[0];
@@ -117,9 +117,9 @@ namespace Lab1
                             // Describe line as the line of the file
                             row++;
                             // If the number of characters is less than 4
-                            if (line.Length<4) program.DumpPng(program.StringToQrCode(line), row);
+                            if (line.Length < 4) program.DumpPng(program.StringToQrCode(line), row);
                             // If the number of characters is greater than or equal to 4
-                            else program.DumpPng(program.StringToQrCode(line),row,line.Substring(0,4));
+                            else program.DumpPng(program.StringToQrCode(line), row, line.Substring(0, 4));
                         }
                     }
                 // If there is a -m parameter, open MySQL
@@ -129,7 +129,7 @@ namespace Lab1
                     List<string> qrcodes = program.ReadMysql(args[0].Substring(2));
                     // read by line
                     int row = 0;
-                    foreach(string qrcode in qrcodes)
+                    foreach (string qrcode in qrcodes)
                     {
                         // Describe QRcode as the row in the table
                         row++;
@@ -160,7 +160,8 @@ namespace Lab1
                 else program.PrintQrCode(program.StringToQrCode(str));
             }
             // Input Format Error
-            else Console.WriteLine("The input breaks the rule!");
+            else if (args.Length != 1) Console.WriteLine("The number of arg is too many!");
+            else Console.WriteLine("The length of arg is too long!");
         }
     }
 }
