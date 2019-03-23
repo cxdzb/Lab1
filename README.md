@@ -1,14 +1,14 @@
 # 《C#控制台编程》实验报告
-####学院：软件学院  班级：2017级软工1班  学号：3017218062   姓名：刘书裴
-####日期：  2019  年 3 月 14 日
-##一、功能概述
+#### 学院：软件学院  班级：2017级软工1班  学号：3017218062   姓名：刘书裴
+#### 日期：  2019  年 3 月 14 日
+## 一、功能概述
 1、命令行输入一个”字符串”，则输出对应二维码。
 2、命令行输入”-fqrcode.txt”，则将qrcode.txt中每一行字符串转化为二维码图片。
 3、命令行输入”-mqrcode”，则将mysql的mydata库qrcode表中每一行字符串转化为二维码图片。
 4、命令行输入”-eqrcode.xlsx”，则将qrcode.xlsx中每一行字符串转化为二维码图片。
 5、命令行输入过多、过长或无输入，则输出对应错误。
 
-##二、项目特色
+## 二、项目特色
 1、生成的二维码加入了背景和logo，显得更加华丽。
 2、考虑所有参数情况和文件情况：
 1)加入参数个数限制和长度限制，违反限制会输出相应错误。
@@ -16,20 +16,20 @@
 3、加入try-catch异常语句，防止意外错误的发生。
 4、将大部分功能集成为多个成员函数，避免修改麻烦。
 
-##三、代码总量
+## 三、代码总量
     
 
-##四、工作时间
+## 四、工作时间
       
 
 总共8hours 30minutes左右。
 
-##五、知识点总结图（Concept MAP）
+## 五、知识点总结图（Concept MAP）
 
 
 
-##六、结论
-####实验过程：
+## 六、结论
+#### 实验过程：
 
 1、StringToQrCode和PrintQrCode
 QrCode通过new QrEncoder(ErrorCorrectionLevel.M).Encode(str)创建二维码对象，内部包含一个方阵（Matrix），可通过遍历打印出来。
@@ -43,7 +43,7 @@ QrCode需要用GraphicsRenderer进行渲染，再通过render.draw(graph,qrcode)
 类似于txt，也是用FileStream读取。本次是用NPOI处理Excel，先使用XSSFWorkbook和HSSFWorkbook处理xls与xlsx两种格式，再取GetSheetAt()，使用GetRow().GetCell()取值。
 6、Main
 使用多次判断来实现多种参数的输入，使用try-catch语句避免意外错误的发生而中止程序。新建一个对象用以实现所有功能。
-####实验结果：
+#### 实验结果：
 1、输入“myqrcode”
 
 2、输入“myqrcode test”
