@@ -25,16 +25,21 @@ namespace Lab1
         // Output two-dimensional code
         public void PrintQrCode(QrCode qrcode)
         {
-            for (int i = 0; i < qrcode.Matrix.Width; i++)    ///// Traveling through each point
+            int w = qrcode.Matrix.Width;
+            for(int k=0;k<=w+1;k++) Console.Write("█");     ///// Output the first row
+            Console.WriteLine();
+            for (int i = 0; i < w; i++)    ///// Traveling through each point
             {
-                for (int j = 0; j < qrcode.Matrix.Width; j++)
-                    Console.Write(qrcode.Matrix[j, i] ? '　' : '█');    ///// Output black and white squares
-                Console.WriteLine();
+                Console.Write("█");     ///// Output the first column
+                for (int j = 0; j < w; j++) Console.Write(qrcode.Matrix[j, i] ? '　' : '█');    ///// Output black and white squares
+                Console.Write("█\n");     ///// Output the last column
             }
+            for (int k = 0; k <= w + 1; k++) Console.Write("█");     ///// Output the last row
+            Console.WriteLine();
         }
 
         // Generating PNG pictures
-        public void DumpPng(QrCode qrcode,int row,string name="LengthBelow4")
+        public void DumpPng(QrCode qrcode,int row,string name)
         {
             const int modelSizeInPixels = 16;
             GraphicsRenderer render = new GraphicsRenderer(new FixedModuleSize(modelSizeInPixels, QuietZoneModules.Two), Brushes.Black, Brushes.White);// Define the render
@@ -60,6 +65,17 @@ namespace Lab1
             background.Save(@"..\..\..\results\" + fileNumber + "-" + name + ".png", ImageFormat.Png);    ///// Save as PNG picture
         }
 
+        // Read TXT file
+        public List<string> ReadTxt(string path)
+        {
+            List<string> qrcodes=new List<string>();
+            path = Path.GetFullPath(@"..\..\..\"+path);
+            string line;
+            using (StreamReader file = new StreamReader(new FileStream(path,FileMode.OpenOrCreate, FileAccess.Read)))     ///// Read and display rows from the file until the end of the file
+                while ((line = file.ReadLine()) != null) qrcodes.Add(line);     ///// Read data line by line and store it
+            return qrcodes;
+        }
+
         // Read MySQL database
         public List<string> ReadMysql(string table)
         {
@@ -81,8 +97,8 @@ namespace Lab1
             IWorkbook workbook;    ///// Define the workbook to save the data of excel
             string fileExt = Path.GetExtension(path).ToLower();    ///// Get the Extension(.xls/.xlsx)
             List<string> contents = new List<string>();    ///// Create a list to save every line
-            path = Path.GetFullPath(path);
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))    ///// Open the file
+            path = Path.GetFullPath(@"..\..\..\" + path);
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read))    ///// Open the file
             {
                 if (fileExt == ".xlsx") workbook = new XSSFWorkbook(fs);    ///// Judge which format the file is
                 else if (fileExt == ".xls") workbook = new HSSFWorkbook(fs);
@@ -100,33 +116,28 @@ namespace Lab1
         static void Main(string[] args)
         {
             // Control input length
-            if (args.Length == 1 && args[0].Length <= 64)
+            if (args.Length == 1 && args[0].Length <= 32)
             {
                 Program program = new Program();
                 string str = args[0];
-                // If there is a -f parameter, open the txt file
-                if (str.StartsWith("-f"))
-                    // Open and read files
-                    using (StreamReader file = new StreamReader(args[0].Substring(2)))
-                    {
-                        // Read and display rows from the file until the end of the file
-                        string line;
-                        int row = 0;
-                        while ((line = file.ReadLine()) != null)
-                        {
-                            // Describe line as the line of the file
-                            row++;
-                            // If the number of characters is less than 4
-                            if (line.Length < 4) program.DumpPng(program.StringToQrCode(line), row);
-                            // If the number of characters is greater than or equal to 4
-                            else program.DumpPng(program.StringToQrCode(line), row, line.Substring(0, 4));
-                        }
-                    }
-                // If there is a -m parameter, open MySQL
-                else if (str.StartsWith("-m"))
+                try
                 {
-                    // Connect and read the database
-                    List<string> qrcodes = program.ReadMysql(args[0].Substring(2));
+                    List<string> qrcodes=new List<string>();
+                    if(str.Length>2)
+                    {
+                        // If there is a -f parameter, open the txt file
+                        if (str.StartsWith("-f")) qrcodes = program.ReadTxt(args[0].Substring(2));// Open and read files
+                        // If there is a -m parameter, open MySQL
+                        else if (str.StartsWith("-m")) qrcodes = program.ReadMysql(args[0].Substring(2));// Connect and read the database
+                        // If there is a -e parameter, open the Excel
+                        else if (str.StartsWith("-e")) qrcodes = program.ReadExcel(args[0].Substring(2));// Read the excel
+                        // If there is no - parameter, draw it
+                        else program.PrintQrCode(program.StringToQrCode(str));
+                    }
+                    else if (str == "-f") Console.WriteLine("Lack of the txtname!");
+                    else if (str == "-m") Console.WriteLine("Lack of the tablename!");
+                    else if (str == "-e") Console.WriteLine("Lack of the excelname!");
+                    else program.PrintQrCode(program.StringToQrCode(str));
                     // read by line
                     int row = 0;
                     foreach (string qrcode in qrcodes)
@@ -134,34 +145,22 @@ namespace Lab1
                         // Describe QRcode as the row in the table
                         row++;
                         // If the number of characters is less than 4
-                        if (qrcode.Length < 4) program.DumpPng(program.StringToQrCode(qrcode), row);
+                        if (qrcode.Length <= 4) program.DumpPng(program.StringToQrCode(qrcode), row,qrcode);
                         // If the number of characters is greater than or equal to 4
                         else program.DumpPng(program.StringToQrCode(qrcode), row, qrcode.Substring(0, 4));
                     }
                 }
-                // If there is a -e parameter, open the Excel
-                else if (str.StartsWith("-e"))
+                catch(Exception)
                 {
-                    // Read the excel
-                    List<string> qrcodes = program.ReadExcel(args[0].Substring(2));
-                    // read by line
-                    int row = 0;
-                    foreach (string qrcode in qrcodes)
-                    {
-                        // Describe QRcode as the row in the table
-                        row++;
-                        // If the number of characters is less than 4
-                        if (qrcode.Length < 4) program.DumpPng(program.StringToQrCode(qrcode), row);
-                        // If the number of characters is greater than or equal to 4
-                        else program.DumpPng(program.StringToQrCode(qrcode), row, qrcode.Substring(0, 4));
-                    }
+                    Console.WriteLine("Some errors have happened!");
                 }
-                // If there is no - parameter
-                else program.PrintQrCode(program.StringToQrCode(str));
             }
             // Input Format Error
-            else if (args.Length != 1) Console.WriteLine("The number of arg is too many!");
+            else if (args.Length > 1) Console.WriteLine("The number of arg is too many!");
+            else if (args.Length < 1) Console.WriteLine("No arg!");
             else Console.WriteLine("The length of arg is too long!");
+            Console.WriteLine("Please enter to exit!");
+            Console.ReadLine();
         }
     }
 }
